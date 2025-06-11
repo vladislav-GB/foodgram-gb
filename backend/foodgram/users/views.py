@@ -4,6 +4,7 @@ from .serializers import UserAvatarSerializer
 
 class UserAvatarView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserAvatarSerializer
 
     def get(self, request):
         serializer = UserAvatarSerializer(request.user)
@@ -17,3 +18,13 @@ class UserAvatarView(views.APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        serializer = UserAvatarSerializer(
+            request.user, data=request.data  # НЕ partial
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

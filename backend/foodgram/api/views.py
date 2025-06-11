@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
+from .serializers import CustomUserCreateSerializer
 
 from recipes.models import (
     Recipe, Favourite, ShoppingList,
@@ -24,11 +25,15 @@ User = get_user_model()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['author', 'tags__slug']
+    filterset_fields = ['author']
     search_fields = ['ingredients__name']
+
+    def get_queryset(self):
+        return Recipe.objects.select_related('author').prefetch_related(
+            'recipe_ingredients__ingredient'
+        )
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -46,7 +51,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
-            Favourite.objects.get_or_create(user=request.user, recipe=recipe)
+            obj, created = Favourite.objects.get_or_create(user=request.user, recipe=recipe)
+            if not created:
+                return Response({"errors": "Рецепт уже в избранном"}, status=status.HTTP_400_BAD_REQUEST)
             return Response(status=status.HTTP_201_CREATED)
         Favourite.objects.filter(user=request.user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -59,7 +66,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
-            ShoppingList.objects.get_or_create(user=request.user, recipe=recipe)
+            obj, created = ShoppingList.objects.get_or_create(user=request.user, recipe=recipe)
+            if not created:
+                return Response({"errors": "Рецепт уже в списке покупок"}, status=status.HTTP_400_BAD_REQUEST)
             return Response(status=status.HTTP_201_CREATED)
         ShoppingList.objects.filter(user=request.user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -93,9 +102,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
+    http_method_names = ['get', 'post', 'patch', 'put', 'delete']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CustomUserCreateSerializer
+        return CustomUserSerializer
 
     def get_permissions(self):
         if self.action == 'create':

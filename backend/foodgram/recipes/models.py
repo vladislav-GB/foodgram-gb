@@ -81,15 +81,14 @@ class RecipeIngredientsRelated(models.Model):
         verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
-    Ingredient,
-    on_delete=models.CASCADE,
-    related_name='recipe_ingredients',
-    verbose_name='Ингредиент',
-    default=1,  # например, 1 — id ингредиента, который точно есть
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='ingredient_recipes',  # исправил related_name для избежания конфликта
+        verbose_name='Ингредиент',
     )
     count = models.IntegerField(
         'Количество',
-        validators=(MinValueValidator(1), MaxValueValidator(1000)),
+        validators=[MinValueValidator(1), MaxValueValidator(1000)],
     )
 
     class Meta:
@@ -103,7 +102,9 @@ class RecipeIngredientsRelated(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.count} x {self.ingredient.name} для {self.recipe.name}'
+        ingredient_name = self.ingredient.name if self.ingredient else '???'
+        recipe_name = self.recipe.name if self.recipe else '???'
+        return f'{self.count} x {ingredient_name} для {recipe_name}'
 
 
 class AbstractUserRecipeModel(models.Model):

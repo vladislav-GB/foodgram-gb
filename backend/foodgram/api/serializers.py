@@ -40,27 +40,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-    class Meta:
+    class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = (
-            'id', 'email', 'username',
-            'first_name', 'last_name',
-            'password'
-        )
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return Subscription.objects.filter(user=request.user, author=obj).exists()
-        return False
-
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.password = make_password(password)
-        user.save()
-        return user
+        validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
