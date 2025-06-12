@@ -7,28 +7,50 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='email',
-            field=models.EmailField(help_text='Обязательное, не более 150 символов', max_length=150, unique=True, verbose_name='Почта'),
+            model_name="user",
+            name="email",
+            field=models.EmailField(
+                help_text="Обязательное, не более 150 символов",
+                max_length=150,
+                unique=True,
+                verbose_name="Почта",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='first_name',
-            field=models.CharField(help_text='Обязательное, не более 150 символов', max_length=150, verbose_name='Имя'),
+            model_name="user",
+            name="first_name",
+            field=models.CharField(
+                help_text="Обязательное, не более 150 символов",
+                max_length=150,
+                verbose_name="Имя",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='last_name',
-            field=models.CharField(help_text='Обязательное, не более 150 символов', max_length=150, verbose_name='Фамилия'),
+            model_name="user",
+            name="last_name",
+            field=models.CharField(
+                help_text="Обязательное, не более 150 символов",
+                max_length=150,
+                verbose_name="Фамилия",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='username',
-            field=models.CharField(error_messages={'unique': 'Пользователь с таким именем уже существует.'}, help_text='Обязательное, не более 150 символов', max_length=150, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()], verbose_name='Имя пользователя'),
+            model_name="user",
+            name="username",
+            field=models.CharField(
+                error_messages={
+                    "unique": "Пользователь с таким именем уже существует."
+                },
+                help_text="Обязательное, не более 150 символов",
+                max_length=150,
+                unique=True,
+                validators=[django.contrib.auth.validators.UnicodeUsernameValidator()],
+                verbose_name="Имя пользователя",
+            ),
         ),
     ]

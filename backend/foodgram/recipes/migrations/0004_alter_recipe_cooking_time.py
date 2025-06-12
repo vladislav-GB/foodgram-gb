@@ -7,13 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0003_alter_recipeingredientsrelated_ingredient'),
+        ("recipes", "0003_alter_recipeingredientsrelated_ingredient"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recipe',
-            name='cooking_time',
-            field=models.IntegerField(help_text='Обязательно, укажите время в минутах', validators=[django.core.validators.MaxValueValidator(180), django.core.validators.MinValueValidator(1)], verbose_name='Время приготовления'),
+            model_name="recipe",
+            name="cooking_time",
+            field=models.IntegerField(
+                help_text="Обязательно, укажите время в минутах",
+                validators=[
+                    django.core.validators.MaxValueValidator(180),
+                    django.core.validators.MinValueValidator(1),
+                ],
+                verbose_name="Время приготовления",
+            ),
         ),
     ]
