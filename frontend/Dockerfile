@@ -1,12 +1,20 @@
-# build stage
-FROM node:21.7.1-alpine AS build
+# build env
+FROM node:21.7.1-slim
+
 WORKDIR /app
+
 COPY package*.json ./
+
+# Устанавливаем зависимости
 RUN npm install
-COPY . ./
+
+# Копируем остальные файлы
+COPY . .
+
+# Собираем проект
 RUN npm run build
 
-# production stage
-FROM nginx:1.25-alpine
-COPY --from=build /app/build /usr/share/nginx/html
+# Копируем результат сборки во временную папку, с которой будет работать nginx
+CMD cp -r build result_build
+
 
