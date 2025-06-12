@@ -7,12 +7,12 @@ class UserAvatarView(views.APIView):
     serializer_class = UserAvatarSerializer
 
     def get(self, request):
-        serializer = UserAvatarSerializer(request.user)
+        serializer = UserAvatarSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request):
         serializer = UserAvatarSerializer(
-            request.user, data=request.data, partial=True
+            request.user, data=request.data, partial=True, context={'request': request}
         )
         if serializer.is_valid():
             serializer.save()
@@ -21,7 +21,7 @@ class UserAvatarView(views.APIView):
 
     def put(self, request):
         serializer = UserAvatarSerializer(
-            request.user, data=request.data  # НЕ partial
+            request.user, data=request.data, context={'request': request}
         )
         if serializer.is_valid():
             serializer.save()

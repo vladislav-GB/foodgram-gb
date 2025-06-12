@@ -47,6 +47,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
+class RecipeShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.CharField(source='measurement', read_only=True)
     
@@ -60,11 +66,12 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeIngredientReadSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement = serializers.ReadOnlyField(source='ingredient.measurement')
+    measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement')
+    amount = serializers.ReadOnlyField(source='count')
 
     class Meta:
         model = RecipeIngredientsRelated
-        fields = ('id', 'name', 'measurement', 'count')
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeIngredientWriteSerializer(serializers.Serializer):
@@ -75,6 +82,12 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
         if value <= 0:
             raise serializers.ValidationError('Количество должно быть больше нуля.')
         return value
+
+    def to_internal_value(self, data):
+        data = data.copy()
+        if 'amount' in data:
+            data['count'] = data.pop('amount')
+        return super().to_internal_value(data)
 
 
 # --- MAIN RECIPE SERIALIZERS ---
@@ -146,6 +159,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
+        validated_data.pop('author', None)
+
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
             **validated_data
@@ -154,30 +169,62 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('ingredients', None)
+        ingredients_data = validated_data.get('ingredients')
+
+        if ingredients_data is None:
+            raise serializers.ValidationError({
+                'ingredients': 'Поле ingredients обязательно при обновлении.'
+            })
+
+        validated_data.pop('ingredients')  # удалим после проверки
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        if ingredients_data is not None:
-            RecipeIngredientsRelated.objects.filter(recipe=instance).delete()
-            self.create_ingredients(ingredients_data, instance)
+        RecipeIngredientsRelated.objects.filter(recipe=instance).delete()
+        self.create_ingredients(ingredients_data, instance)
 
         return instance
-
-    def to_representation(self, instance):
-        return RecipeSerializer(instance, context=self.context).data
 
 
 # --- SUBSCRIPTIONS ---
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer(read_only=True)
-    author = CustomUserSerializer(read_only=True)
+    email = serializers.EmailField(source='author.email')
+    username = serializers.CharField(source='author.username')
+    first_name = serializers.CharField(source='author.first_name')
+    last_name = serializers.CharField(source='author.last_name')
+    id = serializers.IntegerField(source='author.id')
+    avatar = serializers.ImageField(source='author.avatar', read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('user', 'author')
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'avatar', 'is_subscribed', 'recipes', 'recipes_count'
+        )
+
+    def get_is_subscribed(self, obj):
+        return True  # по факту, раз это подписка
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = request.query_params.get('recipes_limit')
+        recipes = obj.author.recipes.all()
+
+        if recipes_limit is not None and recipes_limit.isdigit():
+            recipes = recipes[:int(recipes_limit)]
+
+        return RecipeShortSerializer(recipes, many=True, context=self.context).data
+
+    def get_recipes_count(self, obj):
+        return obj.author.recipes.count()
+
+
+
 
 

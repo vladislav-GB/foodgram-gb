@@ -8,3 +8,8 @@ class UserAvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['avatar']
+
+    def validate(self, data):
+        if self.context['request'].method == 'PUT' and 'avatar' not in data:
+            raise serializers.ValidationError({"avatar": "Это поле обязательно."})
+        return data

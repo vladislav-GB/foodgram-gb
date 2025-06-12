@@ -54,7 +54,7 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         'Время приготовления',
         help_text='Обязательно, укажите время в минутах',
-        validators=(MaxValueValidator(180), MinValueValidator(15)),
+        validators=(MaxValueValidator(180), MinValueValidator(1)),
     )
     author = models.ForeignKey(
         User,
@@ -133,6 +133,12 @@ class AbstractUserRecipeModel(models.Model):
 
 
 class ShoppingList(AbstractUserRecipeModel):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+        related_name='shoppinglist'
+    )
 
     class Meta(AbstractUserRecipeModel.Meta):
         verbose_name = 'Список покупок'
@@ -144,10 +150,14 @@ class ShoppingList(AbstractUserRecipeModel):
             )
         ]
 
-    # Опционально можно добавить related_name через переопределение user и recipe, если нужно
-
 
 class Favourite(AbstractUserRecipeModel):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+        related_name='favorite'
+    )
 
     class Meta(AbstractUserRecipeModel.Meta):
         verbose_name = 'Избранное'
