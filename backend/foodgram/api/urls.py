@@ -10,8 +10,8 @@ router.register("recipes", views.RecipeViewSet, basename="recipes")
 router.register("users", views.UserViewSet, basename="users")
 
 urlpatterns = [
-    path("users/set_password/", SetPasswordView.as_view(), name="set-password"),
     path("", include(router.urls)),
+    path("users/set_password/", SetPasswordView.as_view(), name="set-password"),
     path("auth/", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),
     path("users/me/avatar/", UserAvatarView.as_view(), name="user-avatar"),
