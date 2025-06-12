@@ -3,12 +3,15 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from .serializers import CustomUserCreateSerializer
+from .permissions import IsAuthorOrReadOnly
+
 
 from recipes.models import (
     Recipe, Favourite, ShoppingList,
@@ -25,7 +28,7 @@ User = get_user_model()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['author']
     search_fields = ['ingredients__name']
@@ -102,7 +105,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
@@ -115,6 +117,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'create':
+            return [AllowAny()]
+        if self.action in ['list', 'retrieve']:
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -142,6 +146,25 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = CustomUserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def me(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {
+                    "id": None,
+                    "email": None,
+                    "username": None,
+                    "first_name": None,
+                    "last_name": None,
+                    "is_subscribed": False,
+                    "avatar": None
+                },
+                status=status.HTTP_200_OK
+            )
+
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
@@ -149,5 +172,40 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [SearchFilter]
     search_fields = ['name']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class SetPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get("Текущий пароль")
+        new_password = request.data.get("Новый пароль")
+
+        if not current_password or not new_password:
+            return Response(
+                {"detail": "Требуется как текущий пароль, так и новый пароль."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {"Текущий пароль": ["Неверный пароль."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 

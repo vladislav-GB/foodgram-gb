@@ -27,10 +27,11 @@ class Base64ImageField(serializers.ImageField):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
+    avatar = serializers.ImageField(read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'avatar')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
@@ -45,15 +46,13 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super().create(validated_data)
-
 
 class IngredientSerializer(serializers.ModelSerializer):
+    measurement_unit = serializers.CharField(source='measurement', read_only=True)
+    
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement')
+        fields = ('id', 'name', 'measurement_unit')
 
 
 # --- INGREDIENTS: READ vs WRITE ---

@@ -6,27 +6,27 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 class User(AbstractUser):
     username = models.CharField(
         'Имя пользователя',
-        max_length=200,
+        max_length=150,
         unique=True,
-        help_text='Обязательное, не более 200 символов',
+        help_text='Обязательное, не более 150 символов',
         validators=[UnicodeUsernameValidator()],
         error_messages={'unique': 'Пользователь с таким именем уже существует.'}
     )
     email = models.EmailField(
         'Почта',
-        max_length=200,
+        max_length=150,
         unique=True,
-        help_text='Обязательное, не более 200 символов',
+        help_text='Обязательное, не более 150 символов',
     )
     first_name = models.CharField(
         'Имя',
-        max_length=200,
-        help_text='Обязательное, не более 200 символов',
+        max_length=150,
+        help_text='Обязательное, не более 150 символов',
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=200,
-        help_text='Обязательное, не более 200 символов',
+        max_length=150,
+        help_text='Обязательное, не более 150 символов',
     )
     avatar = models.ImageField(
         verbose_name='Аватар',
