@@ -1,3 +1,5 @@
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -160,22 +162,40 @@ class RecipeViewSet(viewsets.ModelViewSet):
             .annotate(total=Sum("count"))
         )
 
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="shopping_list.csv"'
+        file_format = request.query_params.get("format", "txt")
 
-        writer = csv.writer(response)
-        writer.writerow(["Ингредиент", "Количество", "Единица измерения"])
+        if file_format == "pdf":
+            buffer = BytesIO()
+            p = canvas.Canvas(buffer)
+            p.setFont("Helvetica", 14)
+            p.drawString(100, 800, "Список покупок:")
 
+            y = 780
+            for item in ingredients:
+                line = f"- {item['ingredient__name']} ({item['total']} {item['ingredient__measurement']})"
+                p.drawString(100, y, line)
+                y -= 20
+                if y < 50:
+                    p.showPage()
+                    p.setFont("Helvetica", 14)
+                    y = 800
+
+            p.showPage()
+            p.save()
+
+            buffer.seek(0)
+            return HttpResponse(buffer, content_type='application/pdf', headers={
+                'Content-Disposition': 'attachment; filename="shopping_list.pdf"'
+            })
+
+        # По умолчанию .txt
+        shopping_list = "Список покупок:\n\n"
         for item in ingredients:
-            writer.writerow(
-                [
-                    item["ingredient__name"],
-                    item["total"],
-                    item["ingredient__measurement"],
-                ]
-            )
+            shopping_list += f"- {item['ingredient__name']} ({item['total']} {item['ingredient__measurement']})\n"
 
-        return response
+        return HttpResponse(shopping_list, content_type="text/plain", headers={
+        'Content-Disposition': 'attachment; filename="shopping_list.txt"'
+        })
 
     @action(
         detail=True, methods=["get"], url_path="get-link", permission_classes=[AllowAny]
@@ -296,7 +316,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user, context={"request": request})
         return Response(serializer.data)
 
-
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -319,36 +338,25 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(name__istartswith=name)
         return queryset
 
-
 class SetPasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        return self.change_password(request)
-
-    def put(self, request):
-        return self.change_password(request)
-
-    def patch(self, request):
-        return self.change_password(request)
-
-    def change_password(self, request):
         user = request.user
         current_password = request.data.get("current_password")
         new_password = request.data.get("new_password")
 
         if not current_password or not new_password:
-            return Response(
-                {"detail": "Оба поля обязательны."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"detail": "Оба поля обязательны."}, status=400)
 
         if not user.check_password(current_password):
-            return Response(
-                {"current_password": ["Неверный пароль."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"current_password": ["Неверный пароль."]}, status=400)
+
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as e:
+            return Response({"new_password": list(e.messages)}, status=400)
 
         user.set_password(new_password)
         user.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Пароль успешно изменён."}, status=200)

@@ -22,4 +22,6 @@ certifi==2025.4.26
 asgiref==3.8.1
 typing_extensions==4.14.0
 defusedxml==0.7.1
+reportlab
+django-extensions
 

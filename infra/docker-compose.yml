@@ -45,8 +45,8 @@ services:
       - .env
     depends_on:
       - db
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     restart: always
 
   nginx:
