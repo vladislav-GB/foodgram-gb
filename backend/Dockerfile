@@ -1,16 +1,21 @@
-FROM python:3.10-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Dockerfile
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
-
 COPY . .
 
-CMD ["gunicorn", "--chdir", "foodgram", "--bind", "0.0.0.0:8000", "foodgram.wsgi:application"]
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+WORKDIR /app/backend/foodgram
+
+ENV PYTHONPATH="/app/backend/foodgram"
+
+CMD ["gunicorn", "foodgram.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+
+
 
 
 
