@@ -3,7 +3,9 @@ version: '3.3'
 services:
   frontend:
     container_name: foodgram-front
-    build: ../frontend
+    build: 
+      context: ../frontend
+      dockerfile: Dockerfile
     volumes:
       - ../frontend/result_build:/result_build  
     command: >
@@ -29,12 +31,14 @@ services:
     working_dir: /app  
     command: >
       sh -c "
-      python foodgram/manage.py migrate &&
-      python foodgram/manage.py collectstatic --noinput &&
-      gunicorn foodgram.foodgram.wsgi:application --bind 0.0.0.0:8000
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      python manage.py load_ingredients &&
+      gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000
       "
     volumes:
-      - ../backend/:/app   
+      - ../backend/foodgram:/app  
+      - ../data:/data
       - static:/app/static/
       - media:/app/media/
     env_file:
@@ -43,8 +47,6 @@ services:
       - db
     expose:
       - "8000"
-    environment:
-      - PYTHONPATH=/app/foodgram
     restart: always
 
   nginx:
