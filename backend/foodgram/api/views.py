@@ -1,38 +1,28 @@
+import csv
+from io import BytesIO
+
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.views import APIView
-from rest_framework import viewsets, status
+from recipes.models import (Favourite, Ingredient, Recipe,
+                            RecipeIngredientsRelated, ShoppingList)
+from reportlab.pdfgen import canvas
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
-from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
-from .serializers import CustomUserCreateSerializer
-from .permissions import IsAuthorOrReadOnly
-from recipes.models import (
-    Recipe,
-    Favourite,
-    ShoppingList,
-    RecipeIngredientsRelated,
-    Ingredient,
-)
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
 from users.models import Subscription
-from .serializers import (
-    RecipeSerializer,
-    RecipeWriteSerializer,
-    CustomUserSerializer,
-    IngredientSerializer,
-    SubscriptionSerializer,
-)
-import csv
+
+from .permissions import IsAuthorOrReadOnly
+from .serializers import (CustomUserCreateSerializer, CustomUserSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          RecipeWriteSerializer, SubscriptionSerializer)
 
 User = get_user_model()
 
@@ -184,18 +174,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
             p.save()
 
             buffer.seek(0)
-            return HttpResponse(buffer, content_type='application/pdf', headers={
-                'Content-Disposition': 'attachment; filename="shopping_list.pdf"'
-            })
+            return HttpResponse(
+                buffer,
+                content_type="application/pdf",
+                headers={
+                    "Content-Disposition": 'attachment; filename="shopping_list.pdf"'
+                },
+            )
 
         # По умолчанию .txt
         shopping_list = "Список покупок:\n\n"
         for item in ingredients:
             shopping_list += f"- {item['ingredient__name']} ({item['total']} {item['ingredient__measurement']})\n"
 
-        return HttpResponse(shopping_list, content_type="text/plain", headers={
-        'Content-Disposition': 'attachment; filename="shopping_list.txt"'
-        })
+        return HttpResponse(
+            shopping_list,
+            content_type="text/plain",
+            headers={"Content-Disposition": 'attachment; filename="shopping_list.txt"'},
+        )
 
     @action(
         detail=True, methods=["get"], url_path="get-link", permission_classes=[AllowAny]
@@ -316,6 +312,33 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user, context={"request": request})
         return Response(serializer.data)
 
+    @action(
+        detail=False,  # Не привязано к конкретному пользователю (работает с текущим)
+        methods=["post"],
+        url_path="set_password",  # URL будет /users/set_password/
+        permission_classes=[IsAuthenticated],  # Только для авторизованных
+    )
+    def set_password(self, request):
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        if not current_password or not new_password:
+            return Response({"detail": "Оба поля обязательны."}, status=400)
+
+        if not user.check_password(current_password):
+            return Response({"current_password": ["Неверный пароль."]}, status=400)
+
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as e:
+            return Response({"new_password": list(e.messages)}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "Пароль успешно изменён."}, status=200)
+
+
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -337,26 +360,3 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
         if name:
             queryset = queryset.filter(name__istartswith=name)
         return queryset
-
-class SetPasswordView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user
-        current_password = request.data.get("current_password")
-        new_password = request.data.get("new_password")
-
-        if not current_password or not new_password:
-            return Response({"detail": "Оба поля обязательны."}, status=400)
-
-        if not user.check_password(current_password):
-            return Response({"current_password": ["Неверный пароль."]}, status=400)
-
-        try:
-            validate_password(new_password, user=user)
-        except ValidationError as e:
-            return Response({"new_password": list(e.messages)}, status=400)
-
-        user.set_password(new_password)
-        user.save()
-        return Response({"detail": "Пароль успешно изменён."}, status=200)

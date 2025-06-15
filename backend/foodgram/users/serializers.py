@@ -1,5 +1,6 @@
-from rest_framework import serializers
 from api.serializers import Base64ImageField
+from rest_framework import serializers
+
 from .models import User
 
 

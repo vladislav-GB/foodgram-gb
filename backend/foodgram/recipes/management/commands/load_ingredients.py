@@ -1,9 +1,10 @@
-import os
 import csv
-from django.core.management.base import BaseCommand
-from recipes.models import Ingredient
+import os
+
 from django.conf import settings
+from django.core.management.base import BaseCommand
 from django.db import IntegrityError
+from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
@@ -28,18 +29,25 @@ class Command(BaseCommand):
                         skipped += 1
                         continue
                     name, measurement = row[0].strip(), row[1].strip()
-                    if not Ingredient.objects.filter(name=name, measurement=measurement).exists():
+                    if not Ingredient.objects.filter(
+                        name=name, measurement=measurement
+                    ).exists():
                         try:
-                            Ingredient.objects.create(name=name, measurement=measurement)
+                            Ingredient.objects.create(
+                                name=name, measurement=measurement
+                            )
                             added += 1
                         except IntegrityError:
                             skipped += 1
                     else:
                         skipped += 1
 
-            self.stdout.write(self.style.SUCCESS(f"Добавлено {added} ингредиентов. Пропущено: {skipped}"))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Добавлено {added} ингредиентов. Пропущено: {skipped}"
+                )
+            )
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f"Ошибка при загрузке ингредиентов: {str(e)}")
             )
-
