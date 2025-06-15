@@ -60,11 +60,12 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
 
     - name: 🔄 Run Django migrations
-      working-directory: ./backend
+      working-directory: ./backend/foodgram
       run: |
         python manage.py migrate
 
     - name: ✅ Run Django tests
-      working-directory: ./backend
+      working-directory: ./backend/foodgram
       run: |
         python manage.py test
+
