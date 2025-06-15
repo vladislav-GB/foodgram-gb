@@ -102,7 +102,7 @@ docker compose exec backend python manage.py createsuperuser
   backend:
     image: avengusgb/foodgram:latest
 ```
-
+Ссылка на DockerHub:https://hub.docker.com/repository/docker/avengusgb/foodgram/general
 ---
 
 ## 🔗 Доступ
