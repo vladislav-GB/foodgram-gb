@@ -67,6 +67,5 @@ jobs:
     - name: ✅ Run Django tests
       working-directory: ./backend/foodgram
       run: |
-        cd backend/foodgram
         python manage.py test api
 
