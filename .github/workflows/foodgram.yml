@@ -47,20 +47,24 @@ jobs:
         python-version: '3.11'
 
     - name: 🔧 Install dependencies
+      working-directory: ./backend
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install flake8
 
     - name: 🧹 Lint with flake8
+      working-directory: ./backend
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
 
     - name: 🔄 Run Django migrations
+      working-directory: ./backend
       run: |
         python manage.py migrate
 
     - name: ✅ Run Django tests
+      working-directory: ./backend
       run: |
         python manage.py test
