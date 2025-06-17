@@ -118,5 +118,5 @@ docker compose exec backend python manage.py createsuperuser
 📧 [avengus.gb@gmail.com](mailto:avengus.gb@gmail.com)
 🔗 [GitHub: vladislav-GB](https://github.com/vladislav-GB)
 
-Ссылка на GitHub: https://github.com/vladislav-GB/foodgram-gb/blob/main/README.md
+Ссылка на GitHub: https://github.com/vladislav-GB/foodgram-gb
 
