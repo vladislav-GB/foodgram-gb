@@ -11,8 +11,9 @@ class Command(BaseCommand):
     help = "Загрузка ингредиентов из CSV файла"
 
     def handle(self, *args, **options):
-        path = os.path.join(settings.BASE_DIR, "..", "data", "ingredients.csv")
-        path = os.path.abspath(path)
+        path = os.path.abspath(
+            os.path.join(settings.BASE_DIR, "../../data/ingredients.csv")
+        )
 
         if not os.path.exists(path):
             self.stdout.write(self.style.ERROR(f"Файл не найден: {path}"))
@@ -30,11 +31,11 @@ class Command(BaseCommand):
                         continue
                     name, measurement = row[0].strip(), row[1].strip()
                     if not Ingredient.objects.filter(
-                        name=name, measurement=measurement
+                        name=name, measurement_unit=measurement
                     ).exists():
                         try:
                             Ingredient.objects.create(
-                                name=name, measurement=measurement
+                                name=name, measurement_unit=measurement
                             )
                             added += 1
                         except IntegrityError:
