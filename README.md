@@ -92,17 +92,36 @@ docker compose exec backend python manage.py createsuperuser
 
 ---
 
-### 🐋 Запуск с Docker Hub
+## 🚀 Запуск проекта через Docker Hub
 
-Если не хотите собирать образ:
+Выполните:
 
-1. В `docker-compose.yml` укажите:
-
-```yaml
-  backend:
-    image: avengusgb/foodgram:latest
+```bash
+docker pull avengusgb/foodgram-gb:latest
+docker run -d -p 8000:8000 avengusgb/foodgram-gb
 ```
-    Ссылка на DockerHub:https://hub.docker.com/repository/docker/avengusgb/foodgram/general
+В файле infra/docker-compose.yml заменить
+  
+  backend:
+    image: avengusgb/foodgram-gb:latest
+    ...
+    build:  # ❌ удалить
+
+---
+
+### 𐀪𐀪 Пользователи
+
+| Имя пользователя | Email                                               | Пароль    |
+| ---------------- | --------------------------------------------------- | --------- |
+| ADMIN            | [avengus.gb@gmail.com](mailto:avengus.gb@gmail.com) | 1604admin |
+| Heisenberg       | [vlad16918@gmail.com](mailto:vlad16918@gmail.com)   | 1604admin |
+| Vasilok          | [avenvisual@gmail.com](mailto:avenvisual@gmail.com) | 1604admin |
+
+---
+
+```
+🔗 Ссылка на DockerHub:[https://hub.docker.com/r/avengusgb/foodgram-gb](https://hub.docker.com/r/avengusgb/foodgram-gb)
+
 ---
 
 ## 🔗 Доступ
@@ -120,3 +139,112 @@ docker compose exec backend python manage.py createsuperuser
 
 Ссылка на GitHub: https://github.com/vladislav-GB/foodgram-gb
 
+
+
+
+
+
+# Foodgram
+
+Проект Foodgram — это онлайн-сервис для публикации рецептов, добавления их в избранное и формирования списка покупок. Пользователи могут подписываться друг на друга, искать рецепты по ингредиентам и сохранять понравившиеся блюда.
+
+---
+
+## 🚀 Запуск проекта через Docker Hub
+
+Выполните команды:
+
+```bash
+docker pull avengusgb/foodgram-gb:latest
+docker run -d -p 8000:8000 avengusgb/foodgram-gb
+```
+
+### 🔧 Для docker-compose
+
+Если вы используете `infra/docker-compose.yml`, замените секцию `backend`:
+
+```yaml
+  backend:
+    image: avengusgb/foodgram-gb:latest
+    container_name: foodgram-backend
+    env_file:
+      - .env
+    volumes:
+      - ../backend/foodgram:/app  
+      - ../data:/data
+      - static:/app/static/
+      - media:/app/media/
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    restart: always
+```
+
+> ❗️ Не забудьте **удалить или закомментировать** строку `build:` в секции `backend`.
+
+---
+
+### 👤 Тестовые пользователи
+
+| Имя пользователя | Email                                               | Пароль    |
+| ---------------- | --------------------------------------------------- | --------- |
+| ADMIN            | [avengus.gb@gmail.com](mailto:avengus.gb@gmail.com) | 1604admin |
+| Heisenberg       | [vlad16918@gmail.com](mailto:vlad16918@gmail.com)   | 1604admin |
+| Vasilok          | [avenvisual@gmail.com](mailto:avenvisual@gmail.com) | 1604admin |
+
+---
+
+### 📦 Docker Hub
+
+🔗 [https://hub.docker.com/r/avengusgb/foodgram-gb](https://hub.docker.com/r/avengusgb/foodgram-gb)
+
+---
+
+### 📁 Содержимое проекта
+
+* **backend/** — бэкенд Django-приложения
+* **frontend/** — сборка React-интерфейса
+* **infra/** — инфраструктура Docker, конфигурации и nginx
+* **docs/** — документация к API и проекту
+
+---
+
+### 🚧 Основной стек
+
+* Python 3.11
+* Django / DRF
+* PostgreSQL
+* Nginx
+* Docker / Docker Compose
+
+---
+
+### 🔹 Пример запроса API
+
+```
+GET /api/recipes/?is_favorited=1
+```
+
+Ответ:
+
+```json
+{
+  "count": 1,
+  "results": [
+    {
+      "id": 1,
+      "name": "Борщ",
+      "is_favorited": true,
+      ...
+    }
+  ]
+}
+```
+
+---
+
+### 🌐 Автор
+
+**Vladislav Golub**
+GitHub: [https://github.com/vladislav-GB](https://github.com/vladislav-GB)
