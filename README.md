@@ -117,9 +117,8 @@ docker run -d -p 8000:8000 avengusgb/foodgram-gb
 | Heisenberg       | [vlad16918@gmail.com](mailto:vlad16918@gmail.com)   | 1604admin |
 | Vasilok          | [avenvisual@gmail.com](mailto:avenvisual@gmail.com) | 1604admin |
 
----
 
-🔗 Ссылка на DockerHub:[https://hub.docker.com/r/avengusgb/foodgram-gb](https://hub.docker.com/r/avengusgb/foodgram-gb)
+Ссылка на DockerHub:[https://hub.docker.com/r/avengusgb/foodgram-gb](https://hub.docker.com/r/avengusgb/foodgram-gb)
 
 ---
 
