@@ -57,6 +57,7 @@ class User(AbstractUser):
 
     class Meta:
         verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
         ordering = ("username",)
         db_table = "users_user"
 
@@ -81,8 +82,12 @@ class Subscription(models.Model):
 
     class Meta:
         verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
         constraints = [
             models.UniqueConstraint(
                 fields=("user", "author"), name="unique_name_following"
             )
         ]
+
+    def __str__(self):
+        return f"{self.user} подписан на {self.author}"
