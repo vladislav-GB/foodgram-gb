@@ -122,7 +122,7 @@ docker run -d -p 8000:8000 avengusgb/foodgram-gb
 
 ---
 
-## 🔗 Доступ
+## 🔑 Доступ
 
 * Главная: [http://localhost/](http://localhost/)
 * Админка: [http://localhost/admin/](http://localhost/admin/)
@@ -132,7 +132,8 @@ docker run -d -p 8000:8000 avengusgb/foodgram-gb
 ## 👤 Автор
 
 **Владислав Лубягин**
+
 📧 [avengus.gb@gmail.com](mailto:avengus.gb@gmail.com)
-🔗 [GitHub: vladislav-GB](https://github.com/vladislav-GB)
+🐈‍⬛ [GitHub: vladislav-GB](https://github.com/vladislav-GB)
 
 Ссылка на GitHub: https://github.com/vladislav-GB/foodgram-gb
